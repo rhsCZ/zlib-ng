@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 
 /* Callback to provide all input at once */
-static z_uint32_t pull_all(void *desc, z_const unsigned char **buf) {
+static z_uint32_t pull_all(void *desc, const unsigned char **buf) {
     PREFIX3(stream) *strm = (PREFIX3(stream) *)desc;
     if (strm->avail_in == 0)
         return 0;
