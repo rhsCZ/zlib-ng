@@ -75,7 +75,7 @@ static inline int is_dfltcc_enabled(void) {
 static_assert(offsetof(struct dfltcc_param_v0, csb) == DFLTCC_SIZEOF_GDHT_V0, gdht_v0);
 static_assert(sizeof(struct dfltcc_param_v0) == DFLTCC_SIZEOF_CMPR_XPND_V0, cmpr_xpnd_v0);
 
-static inline z_const char *oesc_msg(char *buf, int oesc) {
+static inline const char *oesc_msg(char *buf, int oesc) {
     if (oesc == 0x00)
         return NULL; /* Successful completion */
     else {
@@ -128,17 +128,17 @@ static inline void msan_unpoison_hist(struct dfltcc_param_v0 *param, void *hist)
 
 static inline dfltcc_cc dfltcc(int fn, void *param,
                                unsigned char **op1, size_t *len1,
-                               z_const unsigned char **op2, size_t *len2, void *hist) {
+                               const unsigned char **op2, size_t *len2, void *hist) {
     unsigned char *t2 = op1 ? *op1 : NULL;
     unsigned char *orig_t2 = t2;
     size_t t3 = len1 ? *len1 : 0;
-    z_const unsigned char *t4 = op2 ? *op2 : NULL;
+    const unsigned char *t4 = op2 ? *op2 : NULL;
     size_t t5 = len2 ? *len2 : 0;
     Z_REGISTER int r0 __asm__("r0");
     Z_REGISTER void *r1 __asm__("r1");
     Z_REGISTER unsigned char *r2 __asm__("r2");
     Z_REGISTER size_t r3 __asm__("r3");
-    Z_REGISTER z_const unsigned char *r4 __asm__("r4");
+    Z_REGISTER const unsigned char *r4 __asm__("r4");
     Z_REGISTER size_t r5 __asm__("r5");
     int cc;
 
