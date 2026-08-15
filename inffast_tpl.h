@@ -52,7 +52,7 @@
 void Z_INTERNAL INFLATE_FAST(PREFIX3(stream) *strm, uint32_t start, int safe_mode) {
     /* start: inflate()'s starting value for strm->avail_out */
     struct inflate_state *state;
-    z_const unsigned char *in;  /* local strm->next_in */
+    const unsigned char *in;  /* local strm->next_in */
     const unsigned char *last;  /* have enough input while in < last */
     unsigned char *out;         /* local strm->next_out */
     unsigned char *beg;         /* inflate()'s initial strm->next_out */

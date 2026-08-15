@@ -150,7 +150,7 @@ int32_t Z_EXPORT PREFIX(inflateBackInit_)(PREFIX3(stream) *strm, int32_t windowB
  */
 int32_t Z_EXPORT PREFIX(inflateBack)(PREFIX3(stream) *strm, in_func in, void *in_desc, out_func out, void *out_desc) {
     struct inflate_state *state;
-    z_const unsigned char *next; /* next input */
+    const unsigned char *next; /* next input */
     unsigned char *put;          /* next output */
     unsigned have, left;         /* available input and output */
     uint64_t hold;               /* bit buffer */
