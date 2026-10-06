@@ -319,6 +319,62 @@ static inline uint8_t *gen_striped_rgb_data(size_t bufsize) {
     return buf;
 }
 
+/* Utility function to load file data from files in /test/data/
+ * and loop the data over a bufsize buffer */
+static uint8_t *get_data_file(const char* filename, size_t bufsize) {
+    static size_t src_len = 0;
+    char path[4096];
+    FILE *fp;
+
+    /* Open file */
+    if (snprintf(path, sizeof(path), "%s/%s", TEST_DATA_DIR, filename) >= (int)sizeof(path))
+        return NULL;
+    fp = fopen(path, "rb");
+    if (fp == NULL)
+        return NULL;
+
+    /* Get file length */
+    fseek(fp, 0, SEEK_END);
+    long file_len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    if (file_len <= 0) {
+        fclose(fp);
+        return NULL;
+    }
+
+    /* Buffer alloc */
+    uint8_t *src = (uint8_t *)malloc((size_t)file_len);
+    if (src == NULL)
+        return NULL;
+    uint8_t *buf = (uint8_t *)malloc(bufsize);
+    if (buf == NULL)
+        return NULL;
+
+    /* Read file */
+    if (fread(src, 1, (size_t)file_len, fp) == (size_t)file_len)
+        src_len = (size_t)file_len;
+    else {
+        free(src);
+        free(buf);
+        fclose(fp);
+        return NULL;
+    }
+    fclose(fp);
+
+    /* Loop until the buffer is filled */
+    size_t total = 0;
+    while (total < bufsize) {
+        size_t remaining_space = bufsize - total;
+        total += append_raw(buf + total, remaining_space, src, src_len);
+    }
+    return buf;
+}
+
+
+static uint8_t *get_logfile_data(size_t bufsize) {
+    return get_data_file(const_cast<char*>("dnf5.log"), bufsize);
+}
+
 /* Each variant targets a distinct shape of deflate stream. */
 enum test_data_type {
     TEST_DATA_TEXT = 0,         /* mixed literals + short/medium matches */
@@ -329,6 +385,7 @@ enum test_data_type {
     TEST_DATA_MIXED,            /* binary-like literal runs + medium matches */
     TEST_DATA_REALISTIC_RGB,    /* RGB photo, short matches at dist=3 */
     TEST_DATA_STRIPED_RGB,      /* solid R/G/B stripes, long dist=3 matches */
+    TEST_DATA_LOGFILE,          /* Real logfile: dnf5.log */
     TEST_DATA_COUNT
 };
 
@@ -342,6 +399,7 @@ static inline const char *test_data_type_name(int data_type) {
         case TEST_DATA_MIXED:          return "mixed";
         case TEST_DATA_REALISTIC_RGB:  return "realistic_rgb";
         case TEST_DATA_STRIPED_RGB:    return "striped_rgb";
+        case TEST_DATA_LOGFILE:        return "logfile";
     }
     return NULL;
 }
@@ -356,6 +414,7 @@ static inline uint8_t *gen_test_data(enum test_data_type data_type, size_t bufsi
         case TEST_DATA_MIXED:          return gen_mixed_data(bufsize);
         case TEST_DATA_REALISTIC_RGB:  return gen_realistic_rgb_data(bufsize);
         case TEST_DATA_STRIPED_RGB:    return gen_striped_rgb_data(bufsize);
+        case TEST_DATA_LOGFILE:        return get_logfile_data(bufsize);
         case TEST_DATA_COUNT:          break;
     }
     return NULL;
