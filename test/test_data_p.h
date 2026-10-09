@@ -20,6 +20,65 @@ static inline size_t append_uint8_t(uint8_t *dest, size_t size, uint8_t src) {
     return append_raw(dest, size, &src, 1);
 }
 
+/* Utility function to load file data from files in /test/data/
+ * and loop the data over a bufsize buffer */
+static inline uint8_t *get_data_file(const char* filename, size_t bufsize) {
+    size_t src_len = 0;
+    char path[4096];
+    FILE *fp;
+
+    /* Open file */
+    if (snprintf(path, sizeof(path), "%s/%s", TEST_DATA_DIR, filename) >= (int)sizeof(path)) {
+        return NULL;
+    }
+    fp = fopen(path, "rb");
+    if (fp == NULL) {
+        return NULL;
+    }
+
+    /* Get file length */
+    fseek(fp, 0, SEEK_END);
+    long file_len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    if (file_len <= 0) {
+        fclose(fp);
+        return NULL;
+    }
+
+    /* Buffer alloc */
+    uint8_t *src = (uint8_t *)malloc((size_t)file_len);
+    if (src == NULL) {
+        fclose(fp);
+        return NULL;
+    }
+    uint8_t *buf = (uint8_t *)malloc(bufsize);
+    if (buf == NULL) {
+        free(src);
+        fclose(fp);
+        return NULL;
+    }
+
+    /* Read file */
+    if (fread(src, 1, (size_t)file_len, fp) == (size_t)file_len) {
+        src_len = (size_t)file_len;
+    } else {
+        free(src);
+        free(buf);
+        fclose(fp);
+        return NULL;
+    }
+    fclose(fp);
+
+    /* Loop until the buffer is filled */
+    size_t total = 0;
+    while (total < bufsize) {
+        size_t remaining_space = bufsize - total;
+        total += append_raw(buf + total, remaining_space, src, src_len);
+    }
+    free(src);
+    return buf;
+}
+
 /* English-like text: words drawn Zipf-style from a small vocabulary, with
    occasional novel words mutated from vocabulary ones. Repeated words become
    short-to-medium matches at text-like distances; novel words and word boundaries
@@ -319,60 +378,9 @@ static inline uint8_t *gen_striped_rgb_data(size_t bufsize) {
     return buf;
 }
 
-/* Utility function to load file data from files in /test/data/
- * and loop the data over a bufsize buffer */
-static uint8_t *get_data_file(const char* filename, size_t bufsize) {
-    static size_t src_len = 0;
-    char path[4096];
-    FILE *fp;
-
-    /* Open file */
-    if (snprintf(path, sizeof(path), "%s/%s", TEST_DATA_DIR, filename) >= (int)sizeof(path))
-        return NULL;
-    fp = fopen(path, "rb");
-    if (fp == NULL)
-        return NULL;
-
-    /* Get file length */
-    fseek(fp, 0, SEEK_END);
-    long file_len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    if (file_len <= 0) {
-        fclose(fp);
-        return NULL;
-    }
-
-    /* Buffer alloc */
-    uint8_t *src = (uint8_t *)malloc((size_t)file_len);
-    if (src == NULL)
-        return NULL;
-    uint8_t *buf = (uint8_t *)malloc(bufsize);
-    if (buf == NULL)
-        return NULL;
-
-    /* Read file */
-    if (fread(src, 1, (size_t)file_len, fp) == (size_t)file_len)
-        src_len = (size_t)file_len;
-    else {
-        free(src);
-        free(buf);
-        fclose(fp);
-        return NULL;
-    }
-    fclose(fp);
-
-    /* Loop until the buffer is filled */
-    size_t total = 0;
-    while (total < bufsize) {
-        size_t remaining_space = bufsize - total;
-        total += append_raw(buf + total, remaining_space, src, src_len);
-    }
-    return buf;
-}
-
-
-static uint8_t *get_logfile_data(size_t bufsize) {
-    return get_data_file(const_cast<char*>("dnf5.log"), bufsize);
+/* Generate logfile test data by looping dnf5.log over the buffer. */
+static inline uint8_t *get_logfile_data(size_t bufsize) {
+    return get_data_file("dnf5.log", bufsize);
 }
 
 /* Each variant targets a distinct shape of deflate stream. */
