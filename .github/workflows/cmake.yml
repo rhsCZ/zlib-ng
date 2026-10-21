@@ -213,7 +213,7 @@ jobs:
             # Coverage disabled, causes MSAN errors
 
           - name: Ubuntu GCC MIPS
-            os: ubuntu-latest
+            os: ubuntu-24.04
             cache-key: mips
             cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mips.cmake
             packages: qemu-user crossbuild-essential-mips
@@ -221,7 +221,7 @@ jobs:
             coverage: ubuntu_gcc_mips
 
           - name: Ubuntu GCC MIPS64
-            os: ubuntu-latest
+            os: ubuntu-24.04
             cache-key: mips64
             cmake-args: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mips64.cmake -DWITH_BENCHMARKS=ON
             packages: qemu-user crossbuild-essential-mips64
@@ -422,7 +422,7 @@ jobs:
             # Coverage disabled, causes MSAN errors
 
           - name: Ubuntu Clang-15
-            os: ubuntu-latest
+            os: ubuntu-24.04
             cache-key: clang15
             compiler: clang-15
             cxx-compiler: clang++-15
@@ -798,8 +798,8 @@ jobs:
 
     - name: Checkout test corpora
       uses: actions/checkout@v7
-      # Don't test the extra corpora with Sanitizer builds or RISC-V or e2k or Intel SDE, due to their slow testing.
-      if: ${{ !contains(matrix.name, 'RISC-V') && !contains(matrix.name, 'e2k') && !contains(matrix.cmake-args, 'WITH_SANITIZER') && !contains(matrix.name, 'SDE') }}
+      # Don't test the extra corpora with Sanitizer builds or Cygwin or RISC-V or e2k or Intel SDE, due to their slow testing.
+      if: ${{ !contains(matrix.name, 'Cygwin') && !contains(matrix.name, 'RISC-V') && !contains(matrix.name, 'e2k') && !contains(matrix.cmake-args, 'WITH_SANITIZER') && !contains(matrix.name, 'SDE') }}
       with:
         repository: zlib-ng/corpora
         path: test/data/corpora
@@ -940,7 +940,7 @@ jobs:
         Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/ceip off"
 
     - name: Install packages (macOS)
-      if: runner.os == 'macOS'
+      if: runner.os == 'macOS' && !contains(matrix.name, 'Intel')
       run: |
         brew update
         brew install ninja ${{ matrix.packages }}
